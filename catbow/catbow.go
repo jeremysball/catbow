@@ -30,3 +30,15 @@ type Options struct {
 	// An offset for the starting color allowing varied but deterministic output
 	Seed int64
 }
+
+type Colorizer struct {
+	opts Options
+	offset uint64
+}
+
+func NewColorizer(o Options) *Colorizer {
+	return &Colorizer {
+		opts: o,
+		offset: 0
+	}
+}
