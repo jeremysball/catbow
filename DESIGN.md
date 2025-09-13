@@ -2,7 +2,7 @@
 I included lolcat in a script that runs when I start my terminal `fortune | cowsay | lolcat`. It more than
 doubled my startup time from 25ms to over 60ms (scales with number of lines). I want rainbow text but fast.
     
-### MVP Requirements
+### Core Contract
 Inputs: - stdin (default or when we see `-`)
         - files
         - if none are given we exit and print usage instructions  
@@ -15,6 +15,12 @@ CLI:
        - if given an argument of a readable, accesible file will read and colorize
          contents
        - if no file provided will read from stdin
+       flags:
+          --spread (will stretch the rainbow vertically, default: 1.0)
+          --freq (controls how quickly colors transition, default: 0.1)
+          --seed (controls the random seed, zero is random default: 0)
+          --no-color (prints text exactly as it came in)
+
 Application Layer (main package):
         - parses arguments and options
         - detect color mode 
