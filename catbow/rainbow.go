@@ -73,6 +73,10 @@ func (rb *RainbowStrategy) ColorizeRune(r rune) string {
 
 	rb.cursor += 1
 
-	return fmt.Sprintf("\\033[38;2;%X;%X;%Xm", red, green, blue)
-
+	return fmt.Sprintf(
+		"\033[38;2;%X;%X;%X%cm",
+		int(math.Floor(red)),
+		int(math.Floor(green)),
+		int(math.Floor(blue)),
+		r)
 }
