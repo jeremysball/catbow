@@ -67,8 +67,9 @@ def main():
         p = Path(args.file)
         if p.exists():
             p.unlink()
-        with p.open("+a") as f:
-            f.writelines(sentences)
+        with p.open("a") as f:
+            for s in sentences:
+                f.write(f"{s}\n")
     else:
         print("".join(sentences))
 
