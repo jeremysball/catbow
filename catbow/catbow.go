@@ -5,15 +5,16 @@ import (
 	"io"
 )
 
-type ColorAlgorithm interface {
+type ColorStrategy interface {
 	ColorizeRune(r rune) string
+	Cleanup() string
 }
 
 type Colorizer struct {
-	algo ColorAlgorithm
+	algo ColorStrategy
 }
 
-func NewColorizer(c ColorAlgorithm) *Colorizer {
+func NewColorizer(c ColorStrategy) *Colorizer {
 	return &Colorizer{
 		algo: c,
 	}
