@@ -67,10 +67,11 @@ def main():
         p = Path(args.file)
         if p.exists():
             p.unlink()
-        with p.open("+a") as f:
-            f.writelines(sentences)
+        with p.open("a") as f:
+            for s in sentences:
+                f.write(f"{s}\n\r")
     else:
-        print("".join(sentences))
+        print("\n".join(sentences))
 
 
 if __name__ == "__main__":
