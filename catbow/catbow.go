@@ -1,44 +1,48 @@
 package catbow
 
-// Library code
+import (
+	"bufio"
+	"io"
+)
 
-// pseudocode for RGB calculation
-// red   = sin(frequency * line_number + phase_shift_R)
-// green = sin(frequency * line_number + phase_shift_G)
-// blue  = sin(frequency * line_number + phase_shift_B)
-
-/*
-multiplied with the current line number when calculating RGB values in sin.
-Increasing it will stretch the rainbow vertically
-spread float64
-
-controls our step size through color space. Decreasing it will make the same
-amount of characters transition through less colors
-frequency float64
-
-random number added to line number, allows for variation between runs
-seed int64
-
-turns off all processing. input == output
-noColor bool
-*/
-type Options struct {
-	// Controls the horizontal width of each color band
-	Spread float64
-	// Rotates the rainbow
-	Frequency float64
-	// An offset for the starting color allowing varied but deterministic output
-	Seed int64
+type ColorAlgorithm interface {
+	ColorizeRune(r rune) string
 }
 
 type Colorizer struct {
-	opts Options
-	offset uint64
+	algo ColorAlgorithm
 }
 
-func NewColorizer(o Options) *Colorizer {
-	return &Colorizer {
-		opts: o,
-		offset: 0
+func NewColorizer(c ColorAlgorithm) *Colorizer {
+	return &Colorizer{
+		algo: c,
 	}
+}
+
+// this function is concerned with reading input from r,
+// running whatever APIs needed to get the data to write to w
+func (c *Colorizer) Colorize(r io.Reader, w io.Writer) error {
+	rw := bufio.NewReadWriter(bufio.NewReader(r), bufio.NewWriter(w))
+	for {
+		r, _, readErr := rw.Reader.ReadRune()
+
+		if readErr != nil {
+			flushErr := rw.Writer.Flush()
+			if flushErr != nil {
+				return flushErr
+			}
+
+			if readErr == io.EOF {
+				return nil
+			} else {
+				return readErr
+			}
+		}
+
+		_, err := rw.Writer.WriteString((c.algo.ColorizeRune(r)))
+		if err != nil {
+			return err
+		}
+	}
+
 }
