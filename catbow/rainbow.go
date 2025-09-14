@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+
+	"github.com/lordxarus/catbow/catbow/encoder/ansi"
 )
 
 // I think these files that implement ColorAlgorithms should be self contained
@@ -36,6 +38,10 @@ type RainbowStrategy struct {
 	redShift   float64
 	greenShift float64
 	blueShift  float64
+}
+
+func (rb *RainbowStrategy) Cleanup() string {
+	return ansi.Reset
 }
 
 func NewRainbow(opts RainbowOptions) *RainbowStrategy {
