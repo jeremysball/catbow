@@ -13,7 +13,7 @@ def make_sentences(
     def make_chars(n_char: int) -> Generator[str]:
         for _ in range(n_char):
             code = math.floor(random.random() * max_char) % max_char
-            yield chr(code + min_char) if code < min_char else chr(code)
+            yield chr(min_char) if code < min_char else chr(code)
 
     def make_sentences(n_sentences: int) -> list[str]:
         sentences = []
