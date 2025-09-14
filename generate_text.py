@@ -8,12 +8,9 @@ from typing import Generator
 
 
 def make_sentences(
-    num_lines: int, line_length: int, char_limits: tuple[int, int]
+    num_lines: int, line_length: int, min_char: int, max_char: int
 ) -> list[str]:
     def make_chars(n_char: int) -> Generator[str]:
-        min_char = char_limits[0]
-        max_char = char_limits[1]
-
         for _ in range(n_char):
             code = math.floor(random.random() * max_char) % max_char
             yield chr(code + min_char) if code < min_char else chr(code)
@@ -61,7 +58,8 @@ def main():
     sentences = make_sentences(
         num_lines=args.num_lines,
         line_length=args.line_length,
-        char_limits=(args.min, args.max),
+        min_char=args.min,
+        max_char=args.max,
     )
     if args.file is not None:
         p = Path(args.file)
