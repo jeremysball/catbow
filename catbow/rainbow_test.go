@@ -1,8 +1,9 @@
 package catbow
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func setupRainbow() *RainbowStrategy {
@@ -18,10 +19,10 @@ func TestColorGeneration(t *testing.T) {
 	outB := rb.ColorizeRune('b')
 
 	assert.Contains(t, outR, "\033[38;2")
-	assert.Contains(t, outR, "mr")
+	assert.Contains(t, outR, "rm")
 
 	assert.Contains(t, outB, "\033[38;2")
-	assert.Contains(t, outB, "mb")
+	assert.Contains(t, outB, "bm")
 
 	assert.NotEqual(t, outR, rb.ColorizeRune('r'))
 }
@@ -30,7 +31,7 @@ func TestNoColorGeneration(t *testing.T) {
 	rb := setupRainbow()
 	rb.opts.NoColor = true
 
-	assert.Equal(t, 'r', rb.ColorizeRune('r'))
+	assert.Equal(t, string('r'), rb.ColorizeRune('r'))
 
 }
 
