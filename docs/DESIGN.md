@@ -43,3 +43,33 @@ Colorizer:
 - `func NewColorizer(Options) *Colorizer`
 - `func Colorize(w io.Writer, r io.Reader) error`
 
+Rainbow Algorithm:
+
+```python
+import math
+
+freq = .1
+spread = 3
+seed = 1
+offset = seed + 1
+scled_offset = lambda: offset / spread
+red_shift = 0
+green_shift = (2*mathi) / 3
+blue_shift = (4*mathi) / 3
+def col(shift):
+    return round(((math.sin(freq*scled_offset() + shift) * 127) + 128) % 255)
+```
+Color math:
+
+freq: .05
+spread: 1.05
+seed: 1
+
+// first character, offset starts at seed + 1
+offset: 2
+scled_offset = 2 / 1.05 = 1.9047619047619047
+
+red = sin(.05 * scled_offset) + 0 * 127 + 128
+red = 128.09509418758475
+green = 139.08327219152056
+blue = 150.07145019545635
