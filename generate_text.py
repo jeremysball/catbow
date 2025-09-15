@@ -6,23 +6,29 @@ import random
 from pathlib import Path
 from typing import Generator
 
+DEFAULT_MIN_CHAR = 34
+DEFAULT_MAX_CHAR = 127
+
+
+def make_chars(n_char: int, min_char: int, max_char: int) -> Generator[str]:
+    for _ in range(n_char):
+        code = int(random.random() * max_char) % max_char
+        code += min_char
+        yield chr(code)
+        # yield chr(min_char) if code < min_char else chr(code)
+
+
+def make_sentence(line_length: int, min_char: int, max_char: int) -> str:
+    return "".join(
+        [c for c in make_chars(line_length, min_char=min_char, max_char=max_char)]
+    )
+
 
 def make_sentences(
     num_lines: int, line_length: int, min_char: int, max_char: int
-) -> list[str]:
-    def make_chars(n_char: int) -> Generator[str]:
-        for _ in range(n_char):
-            code = math.floor(random.random() * max_char) % max_char
-            yield chr(min_char) if code < min_char else chr(code)
-
-    def make_sentences(n_sentences: int) -> list[str]:
-        sentences = []
-        for _ in range(n_sentences):
-            sentence = "".join([c for c in make_chars(line_length)])
-            sentences.append(sentence)
-        return sentences
-
-    return make_sentences(num_lines)
+) -> Generator[str]:
+    for _ in range(num_lines):
+        yield make_sentence(line_length, min_char, max_char)
 
 
 def main():
@@ -40,17 +46,17 @@ def main():
     )
     parser.add_argument(
         "--max",
-        default=128,
+        default=DEFAULT_MAX_CHAR,
         type=int,
         required=False,
-        help="max ascii character code to write to file. default: 128",
+        help="max ascii character code to write to file. default: DEFAULT_MAX_CHAR",
     )
     parser.add_argument(
         "--min",
-        default=33,
+        default=DEFAULT_MIN_CHAR,
         type=int,
         required=False,
-        help="min ascii character code to write to file. default: 33",
+        help="min ascii character code to write to file. default: DEFAULT_MIN_CHAR",
     )
 
     args = parser.parse_args()
@@ -61,15 +67,22 @@ def main():
         min_char=args.min,
         max_char=args.max,
     )
+
     if args.file is not None:
         p = Path(args.file)
         if p.exists():
             p.unlink()
         with p.open("a") as f:
-            for s in sentences:
-                f.write(f"{s}\n\r")
+            percent = 0.0
+            for i, s in enumerate(sentences):
+                if (i + 1) % (args.num_lines // 10) == 0:
+                    percent += 10.0
+                    print(f"{percent}% done")
+
+                f.write(s)
     else:
-        print("\n".join(sentences))
+        for s in sentences:
+            print(s)
 
 
 if __name__ == "__main__":
