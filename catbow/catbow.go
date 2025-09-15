@@ -2,47 +2,56 @@ package catbow
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"io"
+	"unicode/utf8"
 )
 
-type ColorStrategy interface {
-	ColorizeRune(r rune) string
+type Cleanupper interface {
 	Cleanup() string
 }
 
+type ColorStrategy interface {
+	colorizeRune(r rune) string
+}
+
 type Colorizer struct {
-	algo ColorStrategy
+	// TODO: this can be unexported once encoder is implemented
+	Strategy ColorStrategy
 }
 
 func NewColorizer(c ColorStrategy) *Colorizer {
 	return &Colorizer{
-		algo: c,
+		Strategy: c,
 	}
 }
 
 // this function is concerned with reading input from r,
 // running whatever APIs needed to get the data to write to w
 func (c *Colorizer) Colorize(r io.Reader, w io.Writer) error {
-	rw := bufio.NewReadWriter(bufio.NewReader(r), bufio.NewWriter(w))
+	s := bufio.NewScanner(r)
+	s.Split(bufio.ScanRunes)
 	for {
-		r, _, readErr := rw.Reader.ReadRune()
+		if !s.Scan() {
+			return s.Err()
+		}
 
-		if readErr != nil {
-			flushErr := rw.Writer.Flush()
-			if flushErr != nil {
-				return flushErr
-			}
+		r, size := utf8.DecodeRune(s.Bytes())
 
-			if readErr == io.EOF {
-				return nil
-			} else {
-				return readErr
+		if r == utf8.RuneError {
+			switch size {
+			case 0:
+				return errors.New("RuneError: DecodeRune got passed an empty buffer")
+			case 1:
+				return errors.New("colorize: invalid encoding for bytes % +q")
 			}
 		}
 
-		_, err := rw.Writer.WriteString((c.algo.ColorizeRune(r)))
+		coloredString := c.Strategy.colorizeRune(r)
+		_, err := w.Write([]byte(coloredString))
 		if err != nil {
-			return err
+			return fmt.Errorf("colorize: error while writing to stdout: %w", err)
 		}
 	}
 
