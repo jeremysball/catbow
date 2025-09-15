@@ -44,7 +44,7 @@ func (rb *RainbowStrategy) Cleanup() string {
 	return ansi.Reset
 }
 
-func NewRainbow(opts RainbowOptions) *RainbowStrategy {
+func NewRainbowStrategy(opts RainbowOptions) *RainbowStrategy {
 	return &RainbowStrategy{
 		opts:       opts,
 		cursor:     0,
@@ -52,6 +52,10 @@ func NewRainbow(opts RainbowOptions) *RainbowStrategy {
 		greenShift: 2 * math.Pi / 3,
 		blueShift:  4 * math.Pi / 3,
 	}
+}
+
+func NewRainbowStrategyDefaultOpts() *RainbowStrategy {
+	return NewRainbowStrategy(*NewDefaultRainbowOptions())
 }
 
 /*
@@ -62,7 +66,7 @@ func NewRainbow(opts RainbowOptions) *RainbowStrategy {
 			"#%02X%02X%02X" % [ red, green, blue ]
 	    end
 */
-func (rb *RainbowStrategy) ColorizeRune(r rune) string {
+func (rb *RainbowStrategy) colorizeRune(r rune) string {
 	if rb.opts.NoColor {
 		return string(r)
 	}
@@ -80,7 +84,7 @@ func (rb *RainbowStrategy) ColorizeRune(r rune) string {
 	rb.cursor += 1
 
 	return fmt.Sprintf(
-		"\033[38;2;%X;%X;%X%cm",
+		ansi.Esc+"[38;2;%d;%d;%dm%c",
 		int(math.Floor(red)),
 		int(math.Floor(green)),
 		int(math.Floor(blue)),
