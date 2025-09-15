@@ -36,6 +36,7 @@ func main() {
 	w := io.Writer(os.Stdout)
 	colorizer := catbow.NewColorizer(catbow.NewRainbowStrategyDefaultOpts())
 	err := colorizer.Colorize(r, w)
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
