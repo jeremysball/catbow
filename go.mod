@@ -1,4 +1,4 @@
-module github.com/lordxarus/catbow
+module github.com/jeremysball/catbow
 
 go 1.25.1
 

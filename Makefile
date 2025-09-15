@@ -10,4 +10,6 @@ test:
 
 clean:
 	go clean
-	rm ${BINARY_NAME}
+	# does go clean -testcache do go clean? 
+	go clean -testcache
+	rm -f ${BINARY_NAME}

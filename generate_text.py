@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # generate test files
 import argparse
+from collections.abc import Callable
 import math
 import random
 from pathlib import Path
@@ -10,7 +11,9 @@ DEFAULT_MIN_CHAR = 34
 DEFAULT_MAX_CHAR = 127
 
 
-def make_chars(n_char: int, min_char: int, max_char: int) -> Generator[str]:
+def make_chars(
+    n_char: int, min_char: int, max_char: int, rand_fn: Callable[[int, int], int]
+) -> Generator[str]:
     for _ in range(n_char):
         code = int(random.random() * max_char) % max_char
         code += min_char
@@ -18,17 +21,28 @@ def make_chars(n_char: int, min_char: int, max_char: int) -> Generator[str]:
         # yield chr(min_char) if code < min_char else chr(code)
 
 
-def make_sentence(line_length: int, min_char: int, max_char: int) -> str:
+def make_sentence(
+    line_width: int, min_char: int, max_char: int, rand_fn: Callable[[int, int], int]
+) -> str:
     return "".join(
-        [c for c in make_chars(line_length, min_char=min_char, max_char=max_char)]
+        [
+            c
+            for c in make_chars(
+                line_width, min_char=min_char, max_char=max_char, rand_fn=rand_fn
+            )
+        ]
     )
 
 
 def make_sentences(
-    num_lines: int, line_length: int, min_char: int, max_char: int
+    num_lines: int,
+    line_width: int,
+    min_char: int,
+    max_char: int,
+    rand_fn: Callable[[int, int], int],
 ) -> Generator[str]:
     for _ in range(num_lines):
-        yield make_sentence(line_length, min_char, max_char)
+        yield make_sentence(line_width, min_char, max_char, rand_fn)
 
 
 def main():
@@ -39,7 +53,7 @@ def main():
 
     parser.add_argument("--file", required=False)
     parser.add_argument(
-        "--line-length", type=int, default=80, required=False, help="default: 80"
+        "--line-width", type=int, default=80, required=False, help="default: 80"
     )
     parser.add_argument(
         "--num-lines", type=int, default=512, required=False, help="default: 512"
@@ -59,13 +73,26 @@ def main():
         help="min ascii character code to write to file. default: DEFAULT_MIN_CHAR",
     )
 
+    parser.add_argument(
+        "--seed",
+        default=0,
+        type=int,
+        required=False,
+        help="seed for randomness. zero == random",
+    )
+
     args = parser.parse_args()
 
     sentences = make_sentences(
         num_lines=args.num_lines,
-        line_length=args.line_length,
+        line_width=args.line_width,
         min_char=args.min,
         max_char=args.max,
+        rand_fn=(
+            random.Random().randint
+            if args.seed == 0
+            else random.Random(args.seed).randint
+        ),
     )
 
     if args.file is not None:
@@ -79,7 +106,7 @@ def main():
                     percent += 10.0
                     print(f"{percent}% done")
 
-                f.write(s)
+                f.write(s + "\n")
     else:
         for s in sentences:
             print(s)

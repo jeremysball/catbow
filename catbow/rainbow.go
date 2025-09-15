@@ -3,90 +3,130 @@ package catbow
 import (
 	"fmt"
 	"math"
-	"math/rand"
 
-	"github.com/lordxarus/catbow/catbow/encoder/ansi"
+	"github.com/jeremysball/catbow/catbow/encoder/ansi"
 )
 
-// I think these files that implement ColorAlgorithms should be self contained
-// If we make Rainbow manage offset then I think that's the only way to maintain
-// consistency. So that means this code will just move the cursor on a call to
-// ColorizeString.
-type RainbowOptions struct {
-	// Controls the horizontal width of each color band
+type rainbowOptions struct {
+	// Spread is a divisor for the offset (position in line). In other words
+	// it controls how fast the color advances through the rainbow as we move left
+	// to right within the line
 	Spread float64
-	// Rotates the rainbow
+	// This has a similar effect to spread. The frequency of the sine wave used to calculate the colors.
 	Frequency float64
-	// An offset for the starting color allowing varied but deterministic output
-	Seed int64
+	// An offset for the starting color, allowing varied but deterministic output
+	Seed int
 	// Disables catbow, input will equal output
-	NoColor bool
-}
-
-func NewDefaultRainbowOptions() *RainbowOptions {
-	return &RainbowOptions{
-		Spread:    3.0,
-		Frequency: 0.1,
-		Seed:      int64(rand.Int()),
-		NoColor:   false,
-	}
-}
-
-type RainbowStrategy struct {
-	opts       RainbowOptions
-	cursor     int64
+	NoColor    bool
 	redShift   float64
 	greenShift float64
 	blueShift  float64
 }
 
-func (rb *RainbowStrategy) Cleanup() string {
-	return ansi.Reset
-}
-
-func NewRainbowStrategy(opts RainbowOptions) *RainbowStrategy {
-	return &RainbowStrategy{
-		opts:       opts,
-		cursor:     0,
+func NewRainbowOptions() *rainbowOptions {
+	return &rainbowOptions{
+		Spread:     3.0,
+		Frequency:  0.1,
+		Seed:       0,
+		NoColor:    false,
 		redShift:   0,
-		greenShift: 2 * math.Pi / 3,
-		blueShift:  4 * math.Pi / 3,
+		greenShift: (2 * math.Pi) / 3,
+		blueShift:  (4 * math.Pi) / 3,
 	}
-}
-
-func NewRainbowStrategyDefaultOpts() *RainbowStrategy {
-	return NewRainbowStrategy(*NewDefaultRainbowOptions())
 }
 
 /*
-		 def self.rainbow(freq, i)
-			red   = Math.sin(freq*i + 0) * 127 + 128
-			green = Math.sin(freq*i + 2*Math::PI/3) * 127 + 128
-			blue  = Math.sin(freq*i + 4*Math::PI/3) * 127 + 128
-			"#%02X%02X%02X" % [ red, green, blue ]
-	    end
+	rainbowStrategy is stateful and therefore not re-usable. To colorize a new
+
+stream, create another strategy.
 */
-func (rb *RainbowStrategy) colorizeRune(r rune) string {
-	if rb.opts.NoColor {
+type rainbowStrategy struct {
+	Opts                rainbowOptions
+	offset              float64
+	prevLineStartOffset float64
+	wasLastRuneNewLine  bool
+}
+
+// extract to ColorEncoder
+func (rb *rainbowStrategy) CleanupStr() string {
+	return ansi.Reset
+}
+
+func NewRainbowStrategy(opts *rainbowOptions) *rainbowStrategy {
+	s := &rainbowStrategy{
+		Opts: *opts,
+	}
+	s.offset = float64(opts.Seed) + 1.0
+	s.prevLineStartOffset = s.offset
+	s.wasLastRuneNewLine = false
+
+	return s
+}
+
+func (rb *rainbowStrategy) calculateRainbow(offset float64) rgbColor {
+
+	freq := rb.Opts.Frequency
+
+	scaledOffset := offset / rb.Opts.Spread
+
+	// math.Sin(freq...)*127 + 128 maps sine (-1 to 1) to a number between 1 and 255
+	red := math.Sin((freq*scaledOffset)+rb.Opts.redShift)*127 + 128
+	green := math.Sin((freq*scaledOffset)+rb.Opts.greenShift)*127 + 128
+	blue := math.Sin((freq*scaledOffset)+rb.Opts.blueShift)*127 + 128
+
+	return rgbColor{
+		R: uint8(math.Round(red)),
+		G: uint8(math.Round(green)),
+		B: uint8(math.Round(blue)),
+	}
+}
+
+func (rb *rainbowStrategy) colorizeRune(r rune) string {
+	/* TODO: Refactor match into a call to calculateRainbow
+	and a call to the injected ColorFormatter which does what
+	the fmt.Sprintf() call does but allows us to be agnostic as
+	to what we're outputting to. Essentially this becomes the
+	API for Colorizers to call
+
+	*/
+	if rb.Opts.NoColor {
 		return string(r)
 	}
 
-	freq := rb.opts.Spread
+	// this is again to deal with the prefix nature of the lolcat code
 
-	// might want to store cursor and seed as floats
-	seed := float64(rb.opts.Seed)
-	cursor := float64(rb.cursor)
+	// since we're doing essentially a postfix operation instead of
+	// lolcat's prefix increment we add 1 to the Seed to derive the
+	// starting offset when creating the strategy
+	if r == '\n' {
+		rb.wasLastRuneNewLine = true
+	}
 
-	red := math.Sin(freq*cursor+rb.redShift+seed)*127 + 128
-	green := math.Sin(freq*cursor+rb.greenShift+seed)*127 + 128
-	blue := math.Sin(freq*cursor+rb.blueShift+seed)*127 + 128
+	// what about mutliple newlines in a row?
+	if rb.wasLastRuneNewLine {
+		rb.wasLastRuneNewLine = false
+		rb.prevLineStartOffset += 1
+		rb.offset = rb.prevLineStartOffset
+	} else {
+		/*
+			A small deviation from lolcat. Offset
+			accumulates the spread:
 
-	rb.cursor += 1
+			off += (1 / Spread) instead of
+			off = (charIndex / Spread).
+
+			Importantly this allows for the offset to be testable
+		*/
+
+		rb.offset = rb.offset + (1 / rb.Opts.Spread)
+	}
+
+	rgb := rb.calculateRainbow(rb.offset)
 
 	return fmt.Sprintf(
 		ansi.Esc+"[38;2;%d;%d;%dm%c",
-		int(math.Floor(red)),
-		int(math.Floor(green)),
-		int(math.Floor(blue)),
+		rgb.R,
+		rgb.G,
+		rgb.B,
 		r)
 }
