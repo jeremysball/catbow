@@ -52,16 +52,16 @@ func (c *Colorizer) Colorize(r io.Reader, w io.Writer) error {
 		if r == utf8.RuneError {
 			switch size {
 			case 0:
-				return errors.New("error: DecodeRune got passed an empty buffer")
+				return errors.New("colorize: DecodeRune got passed an empty buffer")
 			case 1:
-				return errors.New("error: invalid encoding for bytes % +q")
+				return fmt.Errorf("colorize: invalid encoding for bytes % +q", s.Bytes())
 			}
 		}
 
 		coloredString := c.Strategy.colorizeRune(r)
 		_, err := w.Write([]byte(coloredString))
 		if err != nil {
-			return fmt.Errorf("error: exception while writing to stdout: %w", err)
+			return fmt.Errorf("colorize: exception while writing to stdout: %w", err)
 		}
 	}
 
