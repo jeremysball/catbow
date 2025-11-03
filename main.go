@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/jeremysball/catbow/catbow"
+	"github.com/jeremysball/catbow/catbow/encoder/ansi"
 )
 
 func newMockReader(genLineLen, genNumLines int) *bufio.Reader {
@@ -31,76 +32,64 @@ func main() {
 
 	var r *bufio.Reader
 
-	var shouldGenerate bool
-	var freq float64
-	var spread float64
-	var seed int
-	var genLineLen int
-	var genNumLines int
+	var shouldGenerateFlag bool
+	var freqFlag float64
+	var spreadFlag float64
+	var seedFlag int
+	var genLineLenFlag int
+	var genNumLinesFlag int
+
+	rainbowOpts := catbow.NewRainbowOptions()
 
 	// these defaults SHOULD come from the Strategy itself
 	flag.BoolVar(
-		&shouldGenerate,
+		&shouldGenerateFlag,
 		"gen",
 		false,
 		"Enable generating random text to colorize")
-	flag.IntVar(&seed,
+	flag.IntVar(&seedFlag,
 		"seed",
-		0,
+		rainbowOpts.Seed,
 		"Changes what color the rainbow starts on. 0 == random")
-	flag.Float64Var(&spread,
+	flag.Float64Var(&spreadFlag,
 		"spread",
-		1.05,
+		rainbowOpts.Spread,
 		"Rotates the rainbow")
-	flag.Float64Var(&freq,
+	flag.Float64Var(&freqFlag,
 		"freq",
-		0.05,
+		rainbowOpts.Frequency,
 		"Controls the horizontal width of each color band")
-	flag.IntVar(&genLineLen, "gen-line-width", 80, "")
-	flag.IntVar(&genNumLines, "gen-num-lines", 256, "")
+	flag.IntVar(&genLineLenFlag, "gen-line-width", 80, "")
+	flag.IntVar(&genNumLinesFlag, "gen-num-lines", 256, "")
 
 	flag.Parse()
 
 	w := io.Writer(os.Stdout)
-	if shouldGenerate {
-		r = newMockReader(genLineLen, genNumLines)
+	if shouldGenerateFlag {
+		r = newMockReader(genLineLenFlag, genNumLinesFlag)
 	} else {
 		r = bufio.NewReader(os.Stdin)
 	}
 
-	opts := catbow.NewRainbowOptions()
-	if seed == 0 {
+	if seedFlag == 0 {
 		// just picked a number here - the only thing that
 		// matters it that it doesn't become MASSIVE and overflow
 		// the color calculation
-		opts.Seed = rand.IntN(65535)
+		rainbowOpts.Seed = rand.IntN(65535)
 	} else {
-		opts.Seed = seed
+		rainbowOpts.Seed = seedFlag
 	}
-	opts.Spread = spread
-	opts.Frequency = freq
+	rainbowOpts.Spread = spreadFlag
+	rainbowOpts.Frequency = freqFlag
 
-	colorizer := catbow.NewColorizer(catbow.NewRainbowStrategy(opts))
+	colorizer := catbow.NewColorizer(catbow.NewRainbowStrategy(rainbowOpts))
 	err := colorizer.Colorize(r, w)
+
+	fmt.Print(ansi.Reset)
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	/* this will be replaced by
-	AnsiFormatter satisfies Formatter  interface
-	colFmt := AnsiFormatter()
-	if colFmt.(catbow.Cleanupper) {
-		w.colFmt.Cleanup()
-	}
-	*/
 
-	if cleaner, ok := colorizer.Strategy.(catbow.Cleanupper); ok {
-		_, err := w.Write([]byte(cleaner.Cleanup()))
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-	}
 }
