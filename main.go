@@ -14,11 +14,12 @@ import (
 	"github.com/jeremysball/catbow/catbow/encoder/ansi"
 )
 
-func newMockReader(genLineLen, genNumLines int) *bufio.Reader {
+func newMockReader(genLineLen, genNumLines, seed int) *bufio.Reader {
 	cmd := exec.Command(
 		"./generate_text.py",
 		fmt.Sprintf("--line-width=%d", genLineLen),
-		fmt.Sprintf("--num-lines=%d", genNumLines))
+		fmt.Sprintf("--num-lines=%d", genNumLines),
+		fmt.Sprintf("--seed=%d", seed))
 	text, err := cmd.Output()
 	if err != nil {
 		fmt.Println(err)
@@ -36,12 +37,18 @@ func main() {
 	var freqFlag float64
 	var spreadFlag float64
 	var seedFlag int
-	var genLineLenFlag int
-	var genNumLinesFlag int
 
 	rainbowOpts := catbow.NewRainbowOptions()
 
-	// these defaults SHOULD come from the Strategy itself
+	var generatorOpts = struct {
+		seed       int
+		numLines   int
+		lineLength int
+	}{
+		0,
+		80,
+		256,
+	}
 	flag.BoolVar(
 		&shouldGenerateFlag,
 		"gen",
@@ -59,14 +66,15 @@ func main() {
 		"freq",
 		rainbowOpts.Frequency,
 		"Controls the horizontal width of each color band")
-	flag.IntVar(&genLineLenFlag, "gen-line-width", 80, "")
-	flag.IntVar(&genNumLinesFlag, "gen-num-lines", 256, "")
+	flag.IntVar(&generatorOpts.lineLength, "gen-line-length", generatorOpts.lineLength, "")
+	flag.IntVar(&generatorOpts.numLines, "gen-num-lines", generatorOpts.numLines, "")
+	flag.IntVar(&generatorOpts.seed, "gen-seed", generatorOpts.seed, "")
 
 	flag.Parse()
 
 	w := io.Writer(os.Stdout)
 	if shouldGenerateFlag {
-		r = newMockReader(genLineLenFlag, genNumLinesFlag)
+		r = newMockReader(generatorOpts.lineLength, generatorOpts.numLines, generatorOpts.seed)
 	} else {
 		r = bufio.NewReader(os.Stdin)
 	}
