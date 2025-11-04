@@ -51,11 +51,11 @@ func main() {
 	flag.Float64Var(&spread,
 		"spread",
 		1.05,
-		"Rotates the rainbow")
+		"Will stretch the rainbow vertically")
 	flag.Float64Var(&freq,
 		"freq",
 		0.05,
-		"Controls the horizontal width of each color band")
+		"Controls how quickly colors transition")
 	flag.IntVar(&genLineLen, "gen-line-width", 80, "")
 	flag.IntVar(&genNumLines, "gen-num-lines", 256, "")
 

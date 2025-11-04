@@ -36,8 +36,7 @@ func NewRainbowOptions() *rainbowOptions {
 }
 
 /*
-	rainbowStrategy is stateful and therefore not re-usable. To colorize a new
-
+rainbowStrategy is stateful and therefore not re-usable. To colorize a new
 stream, create another strategy.
 */
 type rainbowStrategy struct {
