@@ -30,20 +30,23 @@ number of lines). I want rainbow text but fast.
 - calls `Colorizer`
 - uses standard Go interfaces `Reader` and `Writer` to decouple library from main
 #### catbow package:
-##### `ColorMath`:
-- Responsible for the actual math and production of colored strings
-- Pure functions
-- `func rainbow(freq, i float64) (r, g, b uint)`
+### ColorStrategy
+  `type ColorStrategy interface {
+  	colorizeRune(r rune) string
+  }`
+##### RainbowStrategy:
+RainbowStrategy is stateful and therefore not re-usable. To colorize a new
+stream, create another strategy. Implements ColorStrategy
+- Pure functions:
+- func (rb *rainbowStrategy) calculateRainbow(offset float64) rgbColor 
 
-Colorizer:
-- Stateful 
-- Uses ColorMath to produce escaped strings
-- Reads and writes to injected `Reader` and `Writer`
-- `Options` struct (contains options required for the operation of the Colorizer)
-- `func NewColorizer(Options) *Colorizer`
-- `func Colorize(w io.Writer, r io.Reader) error`
+#### Colorizer:
+Embeds a ColorStrategy and uses its colorizeRune method to colorize runes
+scanned from the Reader and writes them to the supplied Writer 
+- `func NewColorizer(ColorStrategy) *Colorizer`
+- `func (*Colorizer) Colorize(io.Writer, io.Reader) error`
 
-Rainbow Algorithm:
+### Rainbow Algorithm:
 
 ```python
 import math
