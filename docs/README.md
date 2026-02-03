@@ -13,6 +13,12 @@ see docs/BENCHMARK.md for more details
 fortune | cowsay | cb
 ```
 
+## Profile Review (Public Repos)
+```sh
+cb --review-user=jeremysball
+```
+The review uses public GitHub repository metadata to summarize activity and signals. It is not a hiring decision.
+
 ## Install
 ```sh
 go install github.com/jeremysball/catbow/catbow

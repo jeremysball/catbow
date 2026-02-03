@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -37,6 +38,7 @@ func main() {
 	var seed int
 	var genLineLen int
 	var genNumLines int
+	var reviewUser string
 
 	// these defaults SHOULD come from the Strategy itself
 	flag.BoolVar(
@@ -58,8 +60,22 @@ func main() {
 		"Controls how quickly colors transition")
 	flag.IntVar(&genLineLen, "gen-line-width", 80, "")
 	flag.IntVar(&genNumLines, "gen-num-lines", 256, "")
+	flag.StringVar(&reviewUser, "review-user", "", "GitHub username to review public repos for")
 
 	flag.Parse()
+
+	if reviewUser != "" {
+		ctx := context.Background()
+		client := catbow.NewGitHubHTTPClient()
+		repos, err := catbow.FetchPublicRepos(ctx, client, catbow.GitHubAPIBaseURL, reviewUser)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		review := catbow.GenerateProfileReview(repos)
+		fmt.Print(catbow.FormatProfileReview(reviewUser, review))
+		return
+	}
 
 	w := io.Writer(os.Stdout)
 	if shouldGenerate {
