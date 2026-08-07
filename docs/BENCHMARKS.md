@@ -9,7 +9,7 @@ timed using the fish shell `time` builtin (results are the median of five runs)
 ### Startup:
 
 ```fish catbow
-time echo asdf | cb
+time echo asdf | catbow
 ________________________________________________________
 Executed in    3.90 millis    fish           external
    usr time   51.21 millis  533.00 micros   50.67 millis
