@@ -16,7 +16,7 @@ same thing in about 2ms instead of 50.
 ## Usage
 
 ```sh
-fortune | cowsay | cb
+fortune | cowsay | catbow
 ```
 
 ## Install
@@ -42,7 +42,7 @@ Median of 5 runs, catbow vs. lolcat, same input:
 
 | Case | catbow | lolcat | 
 |---|---|---|
-| shell startup (`echo asdf \| cb`) | 3.9ms | 108ms |
+| shell startup (`echo asdf \| catbow`) | 3.9ms | 108ms |
 | 100 lines x 60 chars | 36ms | 206ms |
 | 10k lines x 60 chars | 1.18s | 9.62s |
 | 10k lines x 1000 chars | 18.9s | 169.8s |
