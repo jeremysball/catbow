@@ -1,0 +1,22 @@
+[tools]
+go = "1.25.1"
+
+[tasks.build]
+run = "make build"
+
+[tasks.test]
+run = "make test"
+
+[tasks.lint]
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+unformatted=$(gofmt -l .)
+if [ -n "$unformatted" ]; then
+  echo "$unformatted"
+  exit 1
+fi
+'''
+
+[tasks.check]
+run = "mise run lint && mise run build && mise run test"
