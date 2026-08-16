@@ -1,0 +1,21 @@
+name: check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up mise (reads .mise.toml for the pinned Go version)
+        uses: jdx/mise-action@v2
+      - name: Run check
+        run: mise run check
